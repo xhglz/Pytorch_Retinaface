@@ -1,20 +1,23 @@
 from __future__ import print_function
 import os
+import math
+import time
+import datetime
+import argparse
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torch.backends.cudnn as cudnn
-import argparse
 import torch.utils.data as data
-from data import WiderFaceDetection, detection_collate, preproc, cfg_mnet, cfg_re50
+import torch.backends.cudnn as cudnn
+from torch.cuda.amp import autocast as autocast, GradScaler
+
 from layers.modules import MultiBoxLoss
 from layers.functions.prior_box import PriorBox
-import time
-import datetime
-import math
-from models.retinaface import RetinaFace
 
-from torch.cuda.amp import autocast as autocast, GradScaler
+from models.retinaface import RetinaFace
+from data import WiderFaceDetection, detection_collate, preproc, cfg_mnet, cfg_re50
+
 
 parser = argparse.ArgumentParser(description='Retinaface sparsity-regularization Training')
 parser.add_argument('--training_dataset', default='./data/widerface/train/label.txt', help='Training dataset directory')
@@ -30,7 +33,7 @@ parser.add_argument('--save_folder', default='./weights/', help='Location to sav
 
 parser.add_argument('--sparsity-regularization', '-sr', dest='sr', action='store_true',
                     help='train with channel sparsity regularization')
-parser.add_argument('--s', type=float, default=0.01, help='scale sparse rate') 
+parser.add_argument('--s', type=float, default=0.001, help='scale sparse rate') 
 
 args = parser.parse_args()
 
@@ -157,7 +160,7 @@ def train():
               .format(epoch, max_epoch, (iteration % epoch_size) + 1,
               epoch_size, iteration + 1, max_iter, loss_l.item(), loss_c.item(), loss_landm.item(), lr, batch_time, str(datetime.timedelta(seconds=eta))))
 
-    torch.save(net.state_dict(), save_folder + cfg['name'] + '_Final_F16.pth')
+    torch.save(net.state_dict(), save_folder + cfg['name'] + '_Final_F16_SR.pth')
     # torch.save(net.state_dict(), save_folder + 'Final_Retinaface.pth')
 
 

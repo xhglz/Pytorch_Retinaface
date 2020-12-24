@@ -144,7 +144,7 @@ def train():
               .format(epoch, max_epoch, (iteration % epoch_size) + 1,
               epoch_size, iteration + 1, max_iter, loss_l.item(), loss_c.item(), loss_landm.item(), lr, batch_time, str(datetime.timedelta(seconds=eta))))
 
-    torch.save(net.state_dict(), save_folder + cfg['name'] + '_Final_f16.pth')
+    torch.save(net.state_dict(), save_folder + cfg['name'] + '_Final_F16.pth')
     # torch.save(net.state_dict(), save_folder + 'Final_Retinaface.pth')
 
 
