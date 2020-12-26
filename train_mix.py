@@ -1,21 +1,25 @@
 from __future__ import print_function
 import os
-import torch
-import torch.optim as optim
-import torch.backends.cudnn as cudnn
-import argparse
-import torch.utils.data as data
-from data import WiderFaceDetection, detection_collate, preproc, cfg_mnet, cfg_re50
-from layers.modules import MultiBoxLoss
-from layers.functions.prior_box import PriorBox
+import math
 import time
 import datetime
-import math
-from models.retinaface import RetinaFace
+import argparse
 
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torch.utils.data as data
+import torch.backends.cudnn as cudnn
 from torch.cuda.amp import autocast as autocast, GradScaler
 
-parser = argparse.ArgumentParser(description='Mixed Precision Training')
+from layers.modules import MultiBoxLoss
+from layers.functions.prior_box import PriorBox
+
+from models.retinaface import RetinaFace
+from data import WiderFaceDetection, detection_collate, preproc, cfg_mnet, cfg_re50
+
+
+parser = argparse.ArgumentParser(description='Retinaface sparsity-regularization Training')
 parser.add_argument('--training_dataset', default='./data/widerface/train/label.txt', help='Training dataset directory')
 parser.add_argument('--network', default='mobile0.25', help='Backbone network mobile0.25 or resnet50')
 parser.add_argument('--num_workers', default=4, type=int, help='Number of workers used in dataloading')
@@ -26,6 +30,10 @@ parser.add_argument('--resume_epoch', default=0, type=int, help='resume iter for
 parser.add_argument('--weight_decay', default=5e-4, type=float, help='Weight decay for SGD')
 parser.add_argument('--gamma', default=0.1, type=float, help='Gamma update for SGD')
 parser.add_argument('--save_folder', default='./weights/', help='Location to save checkpoint models')
+
+parser.add_argument('--sparsity-regularization', '-sr', dest='sr', action='store_true', default=False,
+                    help='train with channel sparsity regularization')
+parser.add_argument('--s', type=float, default=0.01, help='scale sparse rate') 
 
 args = parser.parse_args()
 
@@ -88,6 +96,12 @@ with torch.no_grad():
     priors = priorbox.forward()
     priors = priors.cuda()
 
+# additional subgradient descent on the sparsity-induced penalty term
+def updateBN():
+    for m in net.modules():
+        if isinstance(m, nn.BatchNorm2d):
+            m.weight.grad.data.add_(args.s*torch.sign(m.weight.data))  # L1
+
 def train():
     net.train()
     epoch = 0 + args.resume_epoch
@@ -130,11 +144,13 @@ def train():
         with autocast():
             # forward
             out = net(images)
-
             # backprop
             loss_l, loss_c, loss_landm = criterion(out, priors, targets)
             loss = cfg['loc_weight'] * loss_l + loss_c + loss_landm
+
         scaler.scale(loss).backward()
+        if args.sr:
+            updateBN()
         scaler.step(optimizer)
         scaler.update()
         load_t1 = time.time()
@@ -144,7 +160,7 @@ def train():
               .format(epoch, max_epoch, (iteration % epoch_size) + 1,
               epoch_size, iteration + 1, max_iter, loss_l.item(), loss_c.item(), loss_landm.item(), lr, batch_time, str(datetime.timedelta(seconds=eta))))
 
-    torch.save(net.state_dict(), save_folder + cfg['name'] + '_Final_F16.pth')
+    torch.save(net.state_dict(), save_folder + cfg['name'] + '_Final_F16_SR.pth')
     # torch.save(net.state_dict(), save_folder + 'Final_Retinaface.pth')
 
 
