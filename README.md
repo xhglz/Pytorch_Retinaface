@@ -1,5 +1,20 @@
-# RetinaFace in PyTorch
+# Compress RetinaFace
+## WiderFace Val Performance in single scale When using Mobilenet0.25 as backbone net.
+| Style | easy | medium | hard |
+|:-|:-:|:-:|:-:|
+| Normal | 90.70% | 88.16% | 73.82% |
+| Mixed Precision | 90.61% | 88.08% | 73.65% |
+| sparsity-regularization | 90.63% | 88.18% | 73.91% |
 
+## Train the model using WIDER FACE:
+```Shell
+CUDA_VISIBLE_DEVICES=0 python train.py --network mobile0.25
+CUDA_VISIBLE_DEVICES=0 python train_mix.py --network mobile0.25
+CUDA_VISIBLE_DEVICES=0 python train_mix.py --network mobile0.25 -sr --s 0.01
+```
+
+
+# RetinaFace in PyTorch
 A [PyTorch](https://pytorch.org/) implementation of [RetinaFace: Single-stage Dense Face Localisation in the Wild](https://arxiv.org/abs/1905.00641). Model size only 1.7M, when Retinaface use mobilenet0.25 as backbone net. We also provide resnet50 as backbone net to get better result. The official code in Mxnet can be found [here](https://github.com/deepinsight/insightface/tree/master/RetinaFace).
 
 ## Mobile or Edge device deploy
@@ -126,4 +141,9 @@ title={RetinaFace: Single-stage Dense Face Localisation in the Wild},
 author={Deng, Jiankang and Guo, Jia and Yuxiang, Zhou and Jinke Yu and Irene Kotsia and Zafeiriou, Stefanos},
 booktitle={arxiv},
 year={2019}
+```
+## Trained with Sparsity
+```Shell
+CUDA_VISIBLE_DEVICES=0,1,2,3 python train_mix_sr.py --network resnet50 -sr --s 0.0001 or
+CUDA_VISIBLE_DEVICES=0 python train_mix_sr.py --network mobile0.25 -sr --s 0.0001
 ```
