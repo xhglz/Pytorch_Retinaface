@@ -12,7 +12,14 @@ CUDA_VISIBLE_DEVICES=0 python train.py --network mobile0.25
 CUDA_VISIBLE_DEVICES=0 python train_mix.py --network mobile0.25
 CUDA_VISIBLE_DEVICES=0 python train_mix.py --network mobile0.25 -sr --s 0.01
 ```
-
+## Export ONNX:
+```shell
+python convert_to_onnx.py --network mobile0.25 --trained_model ./weights/mobilenet0.25_Final.pth
+```
+## MNNConvert
+```shell
+./MNNConvert -f ONNX --modelFile FaceDetector.onnx --MNNModel FaceDetector.mnn --bizCode MNN
+```
 
 # RetinaFace in PyTorch
 A [PyTorch](https://pytorch.org/) implementation of [RetinaFace: Single-stage Dense Face Localisation in the Wild](https://arxiv.org/abs/1905.00641). Model size only 1.7M, when Retinaface use mobilenet0.25 as backbone net. We also provide resnet50 as backbone net to get better result. The official code in Mxnet can be found [here](https://github.com/deepinsight/insightface/tree/master/RetinaFace).
