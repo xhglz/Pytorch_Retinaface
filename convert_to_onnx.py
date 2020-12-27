@@ -83,6 +83,6 @@ if __name__ == '__main__':
     inputs = torch.randn(1, 3, args.long_side, args.long_side).to(device)
 
     torch_out = torch.onnx._export(net, inputs, output_onnx, export_params=True, verbose=False,
-                                   input_names=input_names, output_names=output_names)
+                                   input_names=input_names, output_names=output_names, opset_version=11)
 
 
