@@ -9,8 +9,8 @@ int32_t NowMicros();
 
 int main(int argc, char **argv)
 {
-    RetinaFace facedetect;
-    string modelpath = "models/FaceDetector.mnn"; 
+    RetinaFace facedetect; 
+    string modelpath = "models/FaceDetector_quant.mnn"; 
     facedetect.Initial(modelpath);
 
     cv::Mat bgr;
