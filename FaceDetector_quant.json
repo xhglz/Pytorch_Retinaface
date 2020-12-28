@@ -1,0 +1,19 @@
+{
+    "format":"BGR",
+    "mean":[
+        104.0,
+        117.0,
+        123.0
+    ],
+    "normal":[
+        1.0,
+        1.0,
+        1.0
+    ],
+    "width":640,
+    "height":640,
+    "path":"data/widerface/test/images/12--Group/",
+    "used_image_num":200,
+    "feature_quantize_method":"KL",
+    "weight_quantize_method":"MAX_ABS"
+}
