@@ -1,27 +1,49 @@
 # Compress RetinaFace
-## WiderFace Val Performance in single scale When using Mobilenet0.25 as backbone net.
+## Mixed Precision Train
 | Style | easy | medium | hard |
 |:-|:-:|:-:|:-:|
 | Normal | 90.70% | 88.16% | 73.82% |
 | Mixed Precision | 90.61% | 88.08% | 73.65% |
 | sparsity-regularization | 90.63% | 88.18% | 73.91% |
 
-## Train the model using WIDER FACE:
 ```Shell
 CUDA_VISIBLE_DEVICES=0 python train.py --network mobile0.25
 CUDA_VISIBLE_DEVICES=0 python train_mix.py --network mobile0.25
 CUDA_VISIBLE_DEVICES=0 python train_mix.py --network mobile0.25 -sr --s 0.01
 ```
-## Export ONNX:
+## MNN
+
+Export ONNX
+
 ```shell
 python convert_to_onnx.py --network mobile0.25 --trained_model ./weights/mobilenet0.25_Final.pth
 ```
-## MNNConvert
+MNNConvert
+
 ```shell
 ./MNNConvert -f ONNX --modelFile FaceDetector.onnx --MNNModel FaceDetector.mnn --bizCode MNN
 ```
+Quantization
+
+```shell
+./quantized.out FaceDetector.mnn FaceDetector_quant.mnn FaceDetector_quant.json
+```
+
+benchmark (test on x86)
+
+```shell
+$ ./benchmark.out ./models 10 0
+MNN benchmark
+Forward type: **CPU** thread=4** precision=2
+--------> Benchmarking... loop = 10, warmup = 0
+[ - ] FaceDetector.mnn            max =   13.426ms  min =   10.566ms  avg =   11.077ms
+[ - ] FaceDetector_quant.mnn      max =   32.227ms  min =   28.030ms  avg =   28.845ms
+```
+
+---
 
 # RetinaFace in PyTorch
+
 A [PyTorch](https://pytorch.org/) implementation of [RetinaFace: Single-stage Dense Face Localisation in the Wild](https://arxiv.org/abs/1905.00641). Model size only 1.7M, when Retinaface use mobilenet0.25 as backbone net. We also provide resnet50 as backbone net to get better result. The official code in Mxnet can be found [here](https://github.com/deepinsight/insightface/tree/master/RetinaFace).
 
 ## Mobile or Edge device deploy
